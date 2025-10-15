@@ -17,11 +17,176 @@ BLACK = (118, 150, 86)
 HIGHLIGHT = (186, 202, 68)
 SELECT = (246, 246, 105)
 
-# Piece representations
+# Piece representations (for legend)
 PIECES = {
     'K': '\u2654', 'Q': '\u2655', 'R': '\u2656', 'B': '\u2657', 'N': '\u2658', 'P': '\u2659',
     'k': '\u265A', 'q': '\u265B', 'r': '\u265C', 'b': '\u265D', 'n': '\u265E', 'p': '\u265F'
 }
+
+
+class PieceRenderer:
+    """Custom piece renderer with distinctive designs for each piece"""
+
+    @staticmethod
+    def draw_piece(surface, piece_type, color, x, y, size):
+        """Draw a chess piece with custom design at the given position"""
+        # Colors for pieces
+        if color == 'white':
+            piece_color = (240, 240, 240)
+            outline_color = (60, 60, 60)
+        else:
+            piece_color = (40, 40, 40)
+            outline_color = (200, 200, 200)
+
+        center_x = x + size // 2
+        center_y = y + size // 2
+
+        if piece_type == 'P':  # Pawn
+            PieceRenderer.draw_pawn(surface, piece_color, outline_color, center_x, center_y, size)
+        elif piece_type == 'R':  # Rook
+            PieceRenderer.draw_rook(surface, piece_color, outline_color, center_x, center_y, size)
+        elif piece_type == 'N':  # Knight
+            PieceRenderer.draw_knight(surface, piece_color, outline_color, center_x, center_y, size)
+        elif piece_type == 'B':  # Bishop
+            PieceRenderer.draw_bishop(surface, piece_color, outline_color, center_x, center_y, size)
+        elif piece_type == 'Q':  # Queen
+            PieceRenderer.draw_queen(surface, piece_color, outline_color, center_x, center_y, size)
+        elif piece_type == 'K':  # King
+            PieceRenderer.draw_king(surface, piece_color, outline_color, center_x, center_y, size)
+
+    @staticmethod
+    def draw_pawn(surface, color, outline, cx, cy, size):
+        """Draw a pawn - simple design with round head"""
+        scale = size / 100
+        # Base
+        pygame.draw.ellipse(surface, color, (cx - 20 * scale, cy + 20 * scale, 40 * scale, 15 * scale))
+        pygame.draw.ellipse(surface, outline, (cx - 20 * scale, cy + 20 * scale, 40 * scale, 15 * scale), 2)
+        # Body
+        pygame.draw.ellipse(surface, color, (cx - 12 * scale, cy - 5 * scale, 24 * scale, 30 * scale))
+        pygame.draw.ellipse(surface, outline, (cx - 12 * scale, cy - 5 * scale, 24 * scale, 30 * scale), 2)
+        # Head
+        pygame.draw.circle(surface, color, (int(cx), int(cy - 15 * scale)), int(10 * scale))
+        pygame.draw.circle(surface, outline, (int(cx), int(cy - 15 * scale)), int(10 * scale), 2)
+
+    @staticmethod
+    def draw_rook(surface, color, outline, cx, cy, size):
+        """Draw a rook - castle tower with crenellations"""
+        scale = size / 100
+        # Base
+        pygame.draw.rect(surface, color, (cx - 22 * scale, cy + 20 * scale, 44 * scale, 12 * scale))
+        pygame.draw.rect(surface, outline, (cx - 22 * scale, cy + 20 * scale, 44 * scale, 12 * scale), 2)
+        # Body
+        pygame.draw.rect(surface, color, (cx - 15 * scale, cy - 15 * scale, 30 * scale, 35 * scale))
+        pygame.draw.rect(surface, outline, (cx - 15 * scale, cy - 15 * scale, 30 * scale, 35 * scale), 2)
+        # Crenellations (castle top)
+        for i in [-12, -4, 4, 12]:
+            pygame.draw.rect(surface, color, (cx + i * scale - 3 * scale, cy - 25 * scale, 6 * scale, 10 * scale))
+            pygame.draw.rect(surface, outline, (cx + i * scale - 3 * scale, cy - 25 * scale, 6 * scale, 10 * scale), 2)
+
+    @staticmethod
+    def draw_knight(surface, color, outline, cx, cy, size):
+        """Draw a knight - horse head shape"""
+        scale = size / 100
+        # Base
+        pygame.draw.ellipse(surface, color, (cx - 20 * scale, cy + 18 * scale, 40 * scale, 15 * scale))
+        pygame.draw.ellipse(surface, outline, (cx - 20 * scale, cy + 18 * scale, 40 * scale, 15 * scale), 2)
+        # Horse head (approximated with polygons)
+        points = [
+            (cx - 5 * scale, cy + 18 * scale),  # neck bottom
+            (cx - 8 * scale, cy - 5 * scale),   # neck top
+            (cx - 5 * scale, cy - 20 * scale),  # back of head
+            (cx + 10 * scale, cy - 18 * scale), # nose
+            (cx + 8 * scale, cy - 8 * scale),   # chin
+            (cx + 2 * scale, cy + 5 * scale),   # chest
+        ]
+        pygame.draw.polygon(surface, color, points)
+        pygame.draw.polygon(surface, outline, points, 2)
+        # Eye
+        pygame.draw.circle(surface, outline, (int(cx + 2 * scale), int(cy - 12 * scale)), int(2 * scale))
+        # Ear
+        pygame.draw.circle(surface, color, (int(cx - 2 * scale), int(cy - 20 * scale)), int(4 * scale))
+        pygame.draw.circle(surface, outline, (int(cx - 2 * scale), int(cy - 20 * scale)), int(4 * scale), 2)
+
+    @staticmethod
+    def draw_bishop(surface, color, outline, cx, cy, size):
+        """Draw a bishop - tall piece with pointed top"""
+        scale = size / 100
+        # Base
+        pygame.draw.ellipse(surface, color, (cx - 20 * scale, cy + 20 * scale, 40 * scale, 12 * scale))
+        pygame.draw.ellipse(surface, outline, (cx - 20 * scale, cy + 20 * scale, 40 * scale, 12 * scale), 2)
+        # Body (tapered)
+        points = [
+            (cx - 15 * scale, cy + 20 * scale),
+            (cx - 10 * scale, cy - 10 * scale),
+            (cx + 10 * scale, cy - 10 * scale),
+            (cx + 15 * scale, cy + 20 * scale),
+        ]
+        pygame.draw.polygon(surface, color, points)
+        pygame.draw.polygon(surface, outline, points, 2)
+        # Neck
+        pygame.draw.ellipse(surface, color, (cx - 8 * scale, cy - 18 * scale, 16 * scale, 12 * scale))
+        pygame.draw.ellipse(surface, outline, (cx - 8 * scale, cy - 18 * scale, 16 * scale, 12 * scale), 2)
+        # Top (pointed)
+        pygame.draw.circle(surface, color, (int(cx), int(cy - 22 * scale)), int(6 * scale))
+        pygame.draw.circle(surface, outline, (int(cx), int(cy - 22 * scale)), int(6 * scale), 2)
+        # Slot on top
+        pygame.draw.line(surface, outline, (cx - 6 * scale, cy - 22 * scale), (cx + 6 * scale, cy - 22 * scale), 2)
+
+    @staticmethod
+    def draw_queen(surface, color, outline, cx, cy, size):
+        """Draw a queen - crown with multiple points"""
+        scale = size / 100
+        # Base
+        pygame.draw.ellipse(surface, color, (cx - 22 * scale, cy + 20 * scale, 44 * scale, 12 * scale))
+        pygame.draw.ellipse(surface, outline, (cx - 22 * scale, cy + 20 * scale, 44 * scale, 12 * scale), 2)
+        # Body (wider)
+        points = [
+            (cx - 18 * scale, cy + 20 * scale),
+            (cx - 12 * scale, cy - 5 * scale),
+            (cx + 12 * scale, cy - 5 * scale),
+            (cx + 18 * scale, cy + 20 * scale),
+        ]
+        pygame.draw.polygon(surface, color, points)
+        pygame.draw.polygon(surface, outline, points, 2)
+        # Crown base
+        pygame.draw.rect(surface, color, (cx - 15 * scale, cy - 12 * scale, 30 * scale, 8 * scale))
+        pygame.draw.rect(surface, outline, (cx - 15 * scale, cy - 12 * scale, 30 * scale, 8 * scale), 2)
+        # Crown points (5 points)
+        for i, x_offset in enumerate([-12, -6, 0, 6, 12]):
+            height = 15 if i % 2 == 0 else 10
+            point_x = cx + x_offset * scale
+            pygame.draw.circle(surface, color, (int(point_x), int(cy - 12 * scale - height * scale)), int(3 * scale))
+            pygame.draw.circle(surface, outline, (int(point_x), int(cy - 12 * scale - height * scale)), int(3 * scale), 2)
+
+    @staticmethod
+    def draw_king(surface, color, outline, cx, cy, size):
+        """Draw a king - crown with cross on top"""
+        scale = size / 100
+        # Base
+        pygame.draw.ellipse(surface, color, (cx - 22 * scale, cy + 20 * scale, 44 * scale, 12 * scale))
+        pygame.draw.ellipse(surface, outline, (cx - 22 * scale, cy + 20 * scale, 44 * scale, 12 * scale), 2)
+        # Body
+        points = [
+            (cx - 18 * scale, cy + 20 * scale),
+            (cx - 12 * scale, cy - 5 * scale),
+            (cx + 12 * scale, cy - 5 * scale),
+            (cx + 18 * scale, cy + 20 * scale),
+        ]
+        pygame.draw.polygon(surface, color, points)
+        pygame.draw.polygon(surface, outline, points, 2)
+        # Crown
+        pygame.draw.rect(surface, color, (cx - 15 * scale, cy - 12 * scale, 30 * scale, 10 * scale))
+        pygame.draw.rect(surface, outline, (cx - 15 * scale, cy - 12 * scale, 30 * scale, 10 * scale), 2)
+        # Crown points (4 points)
+        for x_offset in [-10, -3, 3, 10]:
+            pygame.draw.circle(surface, color, (int(cx + x_offset * scale), int(cy - 12 * scale)), int(3 * scale))
+            pygame.draw.circle(surface, outline, (int(cx + x_offset * scale), int(cy - 12 * scale)), int(3 * scale), 2)
+        # Cross on top
+        cross_y = cy - 22 * scale
+        # Vertical line
+        pygame.draw.line(surface, outline, (cx, cross_y - 8 * scale), (cx, cross_y + 8 * scale), int(3 * scale))
+        # Horizontal line
+        pygame.draw.line(surface, outline, (cx - 5 * scale, cross_y), (cx + 5 * scale, cross_y), int(3 * scale))
 
 
 class Piece:
@@ -392,11 +557,9 @@ class ChessGame:
             for col in range(COLS):
                 piece = self.board.get_piece(row, col)
                 if piece:
-                    symbol = piece.get_symbol()
-                    text = self.font.render(symbol, True, (0, 0, 0))
-                    text_rect = text.get_rect(center=(col * SQUARE_SIZE + SQUARE_SIZE // 2,
-                                                      row * SQUARE_SIZE + SQUARE_SIZE // 2))
-                    self.screen.blit(text, text_rect)
+                    x = col * SQUARE_SIZE
+                    y = row * SQUARE_SIZE
+                    PieceRenderer.draw_piece(self.screen, piece.piece_type, piece.color, x, y, SQUARE_SIZE)
 
     def draw_status(self):
         status_text = f"{self.board.current_turn.capitalize()}'s Turn"
