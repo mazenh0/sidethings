@@ -52,6 +52,7 @@ class Board:
         self.valid_moves = []
         self.white_king_pos = (7, 4)
         self.black_king_pos = (0, 4)
+        self.pending_promotion = None  # (row, col) of pawn to promote
         self.setup_board()
 
     def setup_board(self):
@@ -97,6 +98,21 @@ class Board:
             self.board[end_row][end_col] = piece
             self.board[start_row][start_col] = None
             piece.move(end_row, end_col)
+
+            # Check for pawn promotion
+            if piece.piece_type == 'P':
+                if (piece.color == 'white' and end_row == 0) or (piece.color == 'black' and end_row == 7):
+                    self.pending_promotion = (end_row, end_col)
+                    return  # Don't switch turns yet
+
+            self.current_turn = 'black' if self.current_turn == 'white' else 'white'
+
+    def promote_pawn(self, row, col, new_piece_type):
+        """Promote a pawn to a new piece type (Q, R, B, or N)"""
+        piece = self.board[row][col]
+        if piece and piece.piece_type == 'P':
+            piece.piece_type = new_piece_type
+            self.pending_promotion = None
             self.current_turn = 'black' if self.current_turn == 'white' else 'white'
 
     def get_valid_moves(self, row, col):
@@ -441,7 +457,95 @@ class ChessGame:
             self.screen.blit(name_text, (legend_x + 80, y_offset + 15))
             y_offset += 50
 
+    def draw_promotion_dialog(self):
+        """Draw the pawn promotion selection dialog"""
+        if not self.board.pending_promotion:
+            return
+
+        # Semi-transparent overlay
+        overlay = pygame.Surface((BOARD_WIDTH, HEIGHT))
+        overlay.set_alpha(180)
+        overlay.fill((0, 0, 0))
+        self.screen.blit(overlay, (0, 0))
+
+        # Dialog box
+        dialog_width = 600
+        dialog_height = 200
+        dialog_x = (BOARD_WIDTH - dialog_width) // 2
+        dialog_y = (HEIGHT - dialog_height) // 2
+
+        pygame.draw.rect(self.screen, (60, 60, 60), (dialog_x, dialog_y, dialog_width, dialog_height))
+        pygame.draw.rect(self.screen, (200, 200, 200), (dialog_x, dialog_y, dialog_width, dialog_height), 3)
+
+        # Title
+        title_text = self.small_font.render("Choose promotion piece:", True, (255, 255, 255))
+        self.screen.blit(title_text, (dialog_x + 20, dialog_y + 20))
+
+        # Promotion options
+        row, col = self.board.pending_promotion
+        piece = self.board.get_piece(row, col)
+        promotion_pieces = [('Q', 'Queen'), ('R', 'Rook'), ('B', 'Bishop'), ('N', 'Knight')]
+
+        button_width = 120
+        button_height = 100
+        button_spacing = 20
+        start_x = dialog_x + 30
+
+        for i, (piece_type, name) in enumerate(promotion_pieces):
+            button_x = start_x + i * (button_width + button_spacing)
+            button_y = dialog_y + 70
+
+            # Button background
+            pygame.draw.rect(self.screen, (100, 100, 100), (button_x, button_y, button_width, button_height))
+            pygame.draw.rect(self.screen, (200, 200, 200), (button_x, button_y, button_width, button_height), 2)
+
+            # Piece symbol
+            if piece:
+                symbol = PIECES[piece_type.upper() if piece.color == 'white' else piece_type.lower()]
+                symbol_text = self.font.render(symbol, True, (255, 255, 255))
+                symbol_rect = symbol_text.get_rect(center=(button_x + button_width // 2, button_y + 35))
+                self.screen.blit(symbol_text, symbol_rect)
+
+                # Piece name
+                name_text = self.small_font.render(name, True, (255, 255, 255))
+                name_rect = name_text.get_rect(center=(button_x + button_width // 2, button_y + 80))
+                self.screen.blit(name_text, name_rect)
+
+    def handle_promotion_click(self, pos):
+        """Handle clicks on the promotion dialog"""
+        if not self.board.pending_promotion:
+            return False
+
+        dialog_width = 600
+        dialog_height = 200
+        dialog_x = (BOARD_WIDTH - dialog_width) // 2
+        dialog_y = (HEIGHT - dialog_height) // 2
+
+        button_width = 120
+        button_height = 100
+        button_spacing = 20
+        start_x = dialog_x + 30
+        button_y = dialog_y + 70
+
+        promotion_pieces = ['Q', 'R', 'B', 'N']
+
+        for i, piece_type in enumerate(promotion_pieces):
+            button_x = start_x + i * (button_width + button_spacing)
+
+            if (button_x <= pos[0] <= button_x + button_width and
+                button_y <= pos[1] <= button_y + button_height):
+                row, col = self.board.pending_promotion
+                self.board.promote_pawn(row, col, piece_type)
+                return True
+
+        return False
+
     def handle_click(self, pos):
+        # Check if clicking on promotion dialog
+        if self.board.pending_promotion:
+            if self.handle_promotion_click(pos):
+                return
+
         col = pos[0] // SQUARE_SIZE
         row = pos[1] // SQUARE_SIZE
 
@@ -479,6 +583,7 @@ class ChessGame:
             self.draw_pieces()
             self.draw_status()
             self.draw_legend()
+            self.draw_promotion_dialog()
 
             pygame.display.flip()
 
