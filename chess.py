@@ -5,9 +5,11 @@ import sys
 pygame.init()
 
 # Constants
-WIDTH, HEIGHT = 800, 800
+BOARD_WIDTH = 800
+LEGEND_WIDTH = 250
+WIDTH, HEIGHT = BOARD_WIDTH + LEGEND_WIDTH, 800
 ROWS, COLS = 8, 8
-SQUARE_SIZE = WIDTH // COLS
+SQUARE_SIZE = BOARD_WIDTH // COLS
 
 # Colors
 WHITE = (238, 238, 210)
@@ -395,6 +397,50 @@ class ChessGame:
         pygame.draw.rect(self.screen, (50, 50, 50), (0, 0, WIDTH, 40))
         self.screen.blit(text, (10, 10))
 
+    def draw_legend(self):
+        # Draw legend background
+        legend_x = BOARD_WIDTH
+        pygame.draw.rect(self.screen, (40, 40, 40), (legend_x, 0, LEGEND_WIDTH, HEIGHT))
+
+        # Title
+        title = self.small_font.render("Piece Guide", True, (255, 255, 255))
+        self.screen.blit(title, (legend_x + 20, 60))
+
+        # White pieces
+        white_title = self.small_font.render("White Pieces:", True, (255, 255, 255))
+        self.screen.blit(white_title, (legend_x + 20, 120))
+
+        white_pieces = [
+            ('K', 'King'),
+            ('Q', 'Queen'),
+            ('R', 'Rook'),
+            ('B', 'Bishop'),
+            ('N', 'Knight'),
+            ('P', 'Pawn')
+        ]
+
+        y_offset = 160
+        for code, name in white_pieces:
+            symbol = PIECES[code.upper()]
+            symbol_text = self.font.render(symbol, True, (255, 255, 255))
+            name_text = self.small_font.render(name, True, (255, 255, 255))
+            self.screen.blit(symbol_text, (legend_x + 20, y_offset))
+            self.screen.blit(name_text, (legend_x + 80, y_offset + 15))
+            y_offset += 50
+
+        # Black pieces
+        black_title = self.small_font.render("Black Pieces:", True, (255, 255, 255))
+        self.screen.blit(black_title, (legend_x + 20, y_offset + 20))
+
+        y_offset += 60
+        for code, name in white_pieces:
+            symbol = PIECES[code.lower()]
+            symbol_text = self.font.render(symbol, True, (255, 255, 255))
+            name_text = self.small_font.render(name, True, (255, 255, 255))
+            self.screen.blit(symbol_text, (legend_x + 20, y_offset))
+            self.screen.blit(name_text, (legend_x + 80, y_offset + 15))
+            y_offset += 50
+
     def handle_click(self, pos):
         col = pos[0] // SQUARE_SIZE
         row = pos[1] // SQUARE_SIZE
@@ -432,6 +478,7 @@ class ChessGame:
             self.draw_board()
             self.draw_pieces()
             self.draw_status()
+            self.draw_legend()
 
             pygame.display.flip()
 
